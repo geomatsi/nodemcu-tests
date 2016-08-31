@@ -32,6 +32,7 @@ local RX_ADDR_P0  = 0x0A
 local TX_ADDR     = 0x10
 local RX_PW_P0    = 0x11
 local DYNPD       = 0x1C
+local FEATURE     = 0x1D
 --local EN_AA       = 0x01
 --local EN_RXADDR   = 0x02
 --local SETUP_AW    = 0x03
@@ -48,7 +49,6 @@ local DYNPD       = 0x1C
 --local RX_PW_P4    = 0x15
 --local RX_PW_P5    = 0x16
 --local FIFO_STATUS = 0x17
---local FEATURE     = 0x1D
 
 -- register bits
 local ARD			= 4
@@ -64,6 +64,7 @@ local TX_DS			= 5
 local MAX_RT		= 4
 local PRIM_RX		= 0
 local PWR_UP		= 1
+local EN_DPL		= 2
 
 --
 -- module fields
@@ -176,7 +177,29 @@ end
 
 function M.nrf24_set_payload_size(payload_size)
 	payload = payload_size
-	M.nrf24_write_register(RX_PW_P0, payload_size)
+
+	if (payload > 32) then
+		payload = 32
+	end
+
+	if (payload < 1) then
+		payload = 1
+	end
+
+	M.nrf24_write_register(RX_PW_P0, payload)
+end
+
+function M.nrf24_set_dynamic_payload()
+	payload = 0
+
+	-- FIXME: we may need to enable writing to FEATURE register
+
+	value = M.nrf24_read_register(FEATURE)
+	value = bit.bor(value, bit.lshift(1, EN_DPL))
+	M.nrf24_write_register(FEATURE, value)
+
+	-- enable dynamic payload for all the pipes
+	M.nrf24_write_register(DYNPD, 0x3f)
 end
 
 function M.nrf24_set_channel(channel)
@@ -191,17 +214,27 @@ end
 
 -- TODO: add support for dynamic payload
 function M.nrf24_send_packet(data)
-	xmit = {}
-	for i = 1, payload do
+	xmit_data = {}
+	xmit_len = 32
+
+	-- set packet length for non-dynamic payload
+	if payload > 0 then
+		xmit_len = payload
+	end
+
+	for i = 1, xmit_len do
 		if (data[i] ~= nil) then
-			xmit[i] = data[i]
+			xmit_data[i] = data[i]
 		else
-			xmit[i] = 0x0
+			if payload == 0 then
+				break
+			end
+			xmit_data[i] = 0x0
 		end
 	end
 
 	-- write packet to FIFO
-	M.nrf24_msend_cmd(W_TX_PAYLOAD, xmit)
+	M.nrf24_msend_cmd(W_TX_PAYLOAD, xmit_data)
 
 	-- xmit packet
     nrf24_ce(1);
