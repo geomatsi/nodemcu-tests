@@ -1,3 +1,6 @@
+-- Example 1: nrf24 transmitter
+-- Features: fixed payload length
+
 r = require("nrf24")
 
 r.nrf24_hw_init()
