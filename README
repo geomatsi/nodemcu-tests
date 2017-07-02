@@ -1,3 +1,0 @@
-* how to copy Lua scripts to spiffs on device:
-  $ sudo /home/matsi/bin/luatool.py --port /dev/ttyUSB0 --src nrf24.lua --dest nrf24.lua -b 115200
-  $ sudo /home/matsi/bin/luatool.py --port /dev/ttyUSB0 --src test.lua --dest test.lua -b 115200
