@@ -11,16 +11,16 @@ _G[modname] = M
 -- nRF24 commands
 local R_REGISTER	= 0x00
 local W_REGISTER	= 0x20
-local REGISTER_MASK = 0x1F
-local W_TX_PAYLOAD  = 0xA0
-local FLUSH_TX      = 0xE1
-local FLUSH_RX      = 0xE2
-local NOP           = 0xFF
-local R_RX_PL_WID   = 0x60
-local R_RX_PAYLOAD  = 0x61
---local ACTIVATE      = 0x50
---local W_ACK_PAYLOAD = 0xA8
---local REUSE_TX_PL   = 0xE3
+local REGISTER_MASK	= 0x1F
+local W_TX_PAYLOAD	= 0xA0
+local FLUSH_TX		= 0xE1
+local FLUSH_RX		= 0xE2
+local NOP		= 0xFF
+local R_RX_PL_WID	= 0x60
+local R_RX_PAYLOAD	= 0x61
+--local ACTIVATE	= 0x50
+--local W_ACK_PAYLOAD	= 0xA8
+--local REUSE_TX_PL	= 0xE3
 
 -- nRF24 register map
 local CONFIG      = 0x00
@@ -51,16 +51,16 @@ local FIFO_STATUS = 0x17
 --local RX_PW_P5    = 0x16
 
 -- register bits
-local ARD			= 4
-local ARC			= 0
+local ARD		= 4
+local ARC		= 0
 local RF_PWR_LOW	= 1
 local RF_PWR_HIGH	= 2
 local RF_DR_LOW		= 5
 local RF_DR_HIGH	= 3
 local EN_CRC		= 3
-local CRCO			= 2
-local RX_DR			= 6
-local TX_DS			= 5
+local CRCO		= 2
+local RX_DR		= 6
+local TX_DS		= 5
 local MAX_RT		= 4
 local PRIM_RX		= 0
 local PWR_UP		= 1
@@ -162,10 +162,10 @@ function M.nrf24_msend_cmd(cmd, values)
 end
 
 function M.nrf24_get_status()
-    nrf24_csn(0)
-    _, status = spi.send(1, NOP)
-    nrf24_csn(1)
-    return status
+	nrf24_csn(0)
+	_, status = spi.send(1, NOP)
+	nrf24_csn(1)
+	return status
 end
 
 function M.nrf24_read_register(reg)
@@ -217,7 +217,7 @@ function M.nrf24_start_listening()
 	status = bit.bor(bit.lshift(1, RX_DR), bit.lshift(1, TX_DS), bit.lshift(1, MAX_RT))
 	M.nrf24_write_register(STATUS, status)
 
-    nrf24_ce(1);
+	nrf24_ce(1);
 	tmr.delay(130)
 end
 
@@ -269,11 +269,11 @@ function M.nrf24_get_dynamic_payload_size()
 
 	size = M.nrf24_send_req(R_RX_PL_WID)
 
-    if (size > 32) then
+	if (size > 32) then
 		-- radio noise received, dropping
 		M.nrf24_send_cmd(FLUSH_RX)
 		size = 0
-    end
+	end
 
 	return size
 end
@@ -288,7 +288,7 @@ function M.nrf24_data_read()
 	end
 
 	output = M.nrf24_msend_req(R_RX_PAYLOAD, len)
-    return output
+	return output
 end
 
 function M.nrf24_set_payload_size(payload_size)
@@ -352,7 +352,7 @@ function M.nrf24_send_packet(data)
 	M.nrf24_msend_cmd(W_TX_PAYLOAD, xmit_data)
 
 	-- xmit packet
-    nrf24_ce(1);
+	nrf24_ce(1);
 	tmr.delay(15)
 	nrf24_ce(0);
 end
