@@ -1,3 +1,6 @@
 import init.lua init.lua
-import test.lua test.lua
 import nrf24.lua nrf24.lua
+import test1.lua test1.lua
+import test2.lua test2.lua
+import test3.lua test3.lua
+import test4.lua test4.lua
