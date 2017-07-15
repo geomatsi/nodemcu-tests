@@ -7,8 +7,8 @@ r.nrf24_hw_init()
 r.nrf24_init_node()
 
 r.nrf24_stop_listening()
-r.nrf24_set_channel(76)
-r.nrf24_set_xmit_address({0x45, 0x46, 0x43, 0x4c, 0x49})
+r.nrf24_set_channel(50)
+r.nrf24_set_xmit_address({0xe1, 0xe1, 0xe1, 0xe1, 0xe1})
 
 r.nrf24_set_dynamic_payload()
 

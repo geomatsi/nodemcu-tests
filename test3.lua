@@ -17,7 +17,7 @@ function receiver()
 
 	if (ready > 0) then
 		data = r.nrf24_data_read()
-		print("pkt:" .. data[1] .. data[2] .. data[3] .. data[4] .. data[5])
+		print(unpack(data))
 	end
 end
 
