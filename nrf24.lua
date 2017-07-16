@@ -52,56 +52,51 @@ local ERX_P0		= 0
 local RX_EMPTY		= 0
 
 --
--- module fields
+-- module locals
 --
 
 local PAYLOAD = 0
 local CE_PIN = 3
 local CS_PIN = 4
 
---
--- module methods
---
-
-function M.nrf24_hw_init()
-	spi.setup(1, spi.MASTER, spi.CPOL_LOW, spi.CPHA_LOW, spi.DATABITS_8, 80, spi.FULLDUPLEX)
-	-- CE pin
-	gpio.mode(CE_PIN, gpio.OUTPUT)
-	gpio.write(CE_PIN, gpio.HIGH)
-	-- CS pin
-	gpio.mode(CS_PIN, gpio.OUTPUT)
-	gpio.write(CS_PIN, gpio.HIGH)
-end
-
+-- set NRF24 CE gpio level
 local function nrf24_ce(value)
-	if (value > 0) then
-		gpio.write(CE_PIN, gpio.HIGH)
-	else
-		gpio.write(CE_PIN, gpio.LOW)
-	end
+	local level = (value > 0) and gpio.HIGH or gpio.LOW
+	gpio.write(CE_PIN, level)
 end
 
+-- set NRF24 CSN gpio level
 local function nrf24_csn(value)
-	if (value > 0) then
-		gpio.write(CS_PIN, gpio.HIGH)
-	else
-		gpio.write(CS_PIN, gpio.LOW)
-	end
+	local level = (value > 0) and gpio.HIGH or gpio.LOW
+	gpio.write(CS_PIN, level)
 end
 
+-- reverse 5byte pipe address
 local function reverse_addr(addr_in)
-	---- address is 5bytes length
-	---- address is written inversely
-	addr_out = {}
+	local addr_out = {}
 	for i = 1, 5 do
-		if (addr_in[5 - i + 1] ~= nil) then
-			addr_out[i] = addr_in[5 - i + 1]
-		else
-			addr_out[i] = 0x0
-		end
+		addr_out[i] = addr_in[5 - i + 1] or 0x0
 	end
 
 	return addr_out
+end
+
+--
+-- module exports
+--
+
+-- init nrf24 module
+function M.nrf24_hw_init()
+	-- init SPI#1 (HSPI)
+	spi.setup(1, spi.MASTER, spi.CPOL_LOW, spi.CPHA_LOW, spi.DATABITS_8, 8, spi.FULLDUPLEX)
+
+	-- init NRF24 CE pin
+	gpio.mode(CE_PIN, gpio.OUTPUT)
+	gpio.write(CE_PIN, gpio.HIGH)
+
+	-- init NRF24 CSN pin
+	gpio.mode(CS_PIN, gpio.OUTPUT)
+	gpio.write(CS_PIN, gpio.HIGH)
 end
 
 
