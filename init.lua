@@ -7,7 +7,7 @@ function ls()
 end
 
 function du()
-	f, u, t = file.fsinfo()
+	local f, u, t = file.fsinfo()
 	f = bit.rshift(f, 10)
 	u = bit.rshift(u, 10)
 	t = bit.rshift(t, 10)
