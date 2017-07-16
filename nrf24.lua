@@ -12,15 +12,12 @@ _G[modname] = M
 local R_REGISTER	= 0x00
 local W_REGISTER	= 0x20
 local REGISTER_MASK	= 0x1F
+local R_RX_PL_WID	= 0x60
+local R_RX_PAYLOAD	= 0x61
 local W_TX_PAYLOAD	= 0xA0
 local FLUSH_TX		= 0xE1
 local FLUSH_RX		= 0xE2
 local NOP		= 0xFF
-local R_RX_PL_WID	= 0x60
-local R_RX_PAYLOAD	= 0x61
---local ACTIVATE	= 0x50
---local W_ACK_PAYLOAD	= 0xA8
---local REUSE_TX_PL	= 0xE3
 
 -- nRF24 register map
 local CONFIG      = 0x00
@@ -35,20 +32,6 @@ local DYNPD       = 0x1C
 local FEATURE     = 0x1D
 local EN_RXADDR   = 0x02
 local FIFO_STATUS = 0x17
---local EN_AA       = 0x01
---local SETUP_AW    = 0x03
---local OBSERVE_TX  = 0x08
---local CD          = 0x09
---local RX_ADDR_P1  = 0x0B
---local RX_ADDR_P2  = 0x0C
---local RX_ADDR_P3  = 0x0D
---local RX_ADDR_P4  = 0x0E
---local RX_ADDR_P5  = 0x0F
---local RX_PW_P1    = 0x12
---local RX_PW_P2    = 0x13
---local RX_PW_P3    = 0x14
---local RX_PW_P4    = 0x15
---local RX_PW_P5    = 0x16
 
 -- register bits
 local ARD		= 4
@@ -67,11 +50,6 @@ local PWR_UP		= 1
 local EN_DPL		= 2
 local ERX_P0		= 0
 local RX_EMPTY		= 0
---local ERX_P1		= 1
---local ERX_P2		= 2
---local ERX_P3		= 3
---local ERX_P4		= 4
---local ERX_P5		= 5
 
 --
 -- module fields
