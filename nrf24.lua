@@ -229,7 +229,7 @@ function M.nrf24_data_available()
 		M.nrf24_write_register(STATUS, bit.lshift(1, RX_DR))
 
 		if (bit.isset(status, TX_DS)) then
-			M.nrf24_write_register(STATUS, bits.lshift(1, TX_DS))
+			M.nrf24_write_register(STATUS, bit.lshift(1, TX_DS))
 		end
 
 		data_ready = 1
