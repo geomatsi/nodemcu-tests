@@ -20,6 +20,10 @@ function free()
 	print (bit.rshift(node.heap(), 10) .. ' kB')
 end
 
+function reboot()
+	node.restart()
+end
+
 function stop()
 	file.remove("smars.lua")
 end

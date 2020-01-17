@@ -85,7 +85,7 @@ readings = {}
 -- start a measure cycle
 function measure()
 	readings = {}
-	tmr.start(0)
+	tm:start()
 end
 
 -- called when measure is done
@@ -96,8 +96,10 @@ function done_measuring()
 	led_toggle()
 
 	if dist < 15.0 then
+		print "rotate..."
 		smars_rotate()
 	else
+		print "forward..."
 		smars_forward()
 	end
 
@@ -121,7 +123,7 @@ function calculate()
 
 	-- got all readings
 	if #readings >= AVG_READINGS then
-		tmr.stop(0)
+		tm:stop()
 
 		-- calculate the average of the readings
 		distance = 0
@@ -170,7 +172,8 @@ gpio.mode(LED_PIN, gpio.OUTPUT)
 smars_stop()
 
 -- trigger timer
-tmr.register(0, READING_INTERVAL, tmr.ALARM_AUTO, trigger)
+tm = tmr.create()
+tm:register(READING_INTERVAL, tmr.ALARM_AUTO, trigger)
 
 -- set callback function to be called both on rising and falling edges
 gpio.trig(ECHO_PIN, "both", echo_callback)
