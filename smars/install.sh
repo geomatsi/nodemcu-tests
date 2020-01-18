@@ -23,11 +23,11 @@ upload ()
 {
 	for n in "$@"
 	do
-		echo sudo ${TOOL} upload $n.lua -n main.lua
+		sudo ${TOOL} upload $n.lua -n main.lua
 	done
 
-	echo sudo ${TOOL} upload ../init.lua -n init.lua
-	echo sudo ${TOOL} upload settings.lua -n settings.lua
+	sudo ${TOOL} upload ../init.lua -n init.lua
+	sudo ${TOOL} upload settings.lua -n settings.lua
 }
 
 case "$1" in
