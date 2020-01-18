@@ -1,11 +1,21 @@
 # Notes
 
 ## How to copy Lua scripts to device spiffs
+
+Using [luatool](https://github.com/4refr0nt/luatool):
 ```bash
-$ sudo /home/matsi/bin/luatool.py --port /dev/ttyUSB0 --src test.lua --dest test.lua -b 115200
+$ sudo luatool.py --port /dev/ttyUSB0 --src test.lua --dest test.lua -b 115200
 ```
 
+Using [nodemcu-tool](https://github.com/AndiDittrich/NodeMCU-Tool):
+```bash
+$ sudo nodemcu-tool upload init.lua
+$ sudo nodemcu-tool upload test.lua -n main.lua
+```
+
+
 ## How to create and flash spiffs image
+
 Create image content list
 ```bash
 $ cat script.img
