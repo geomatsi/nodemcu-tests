@@ -7,6 +7,7 @@
         "bit",
         "node",
         "file",
-        "websocket"
+        "websocket",
+        "pwm",
     ]
 }

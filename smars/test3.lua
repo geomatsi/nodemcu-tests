@@ -4,81 +4,30 @@
 --
 
 --
--- PWM motors
+-- modules
 --
 
-LRWD_PIN = 5
-LFWD_PIN = 6
-RRWD_PIN = 7
-RFWD_PIN = 8
-
--- forward
-function f()
-	pwm.start(LFWD_PIN)
-	pwm.stop(LRWD_PIN)
-
-	pwm.start(RFWD_PIN)
-	pwm.stop(RRWD_PIN)
-end
-
--- rotate
-function b()
-	pwm.stop(LFWD_PIN)
-	pwm.start(LRWD_PIN)
-
-	pwm.stop(RFWD_PIN)
-	pwm.start(RRWD_PIN)
-end
-
--- stop
-function s()
-	pwm.stop(LFWD_PIN)
-	pwm.stop(LRWD_PIN)
-
-	pwm.stop(RFWD_PIN)
-	pwm.stop(RRWD_PIN)
-end
-
--- left
-function l()
-	pwm.stop(LFWD_PIN)
-	pwm.start(LRWD_PIN)
-
-	pwm.start(RFWD_PIN)
-	pwm.stop(RRWD_PIN)
-end
-
--- right
-function r()
-	pwm.start(LFWD_PIN)
-	pwm.stop(LRWD_PIN)
-
-	pwm.stop(RFWD_PIN)
-	pwm.start(RRWD_PIN)
-end
+local m = require("pwm_motors")
 
 --
--- LED
+-- settings
 --
 
-LED_PIN = 4
-
-function led_toggle()
-	local val = gpio.read(LED_PIN)
-	if (val == 0) then
-		gpio.write(LED_PIN, gpio.HIGH)
-	else
-		gpio.write(LED_PIN, gpio.LOW)
-	end
-end
+dofile("settings.lua")
 
 --
 -- MAIN
 --
 
-pwm.setup(LRWD_PIN, 1000, 650)
-pwm.setup(LFWD_PIN, 1000, 650)
-pwm.setup(RRWD_PIN, 1000, 650)
-pwm.setup(RFWD_PIN, 1000, 650)
+-- configure motors
+
+m.init(LFWD_PIN, LREV_PIN, RFWD_PIN, RREV_PIN)
+
+F = m.fwd
+B = m.rev
+H = m.stop
+R = m.right
+L = m.left
+S = m.speed
 
 print("ready...")

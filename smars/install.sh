@@ -21,9 +21,15 @@ EOH
 
 upload ()
 {
-	for n in "$@"
+	main=$1
+	shift
+	mods="$@"
+
+	sudo ${TOOL} upload ${main}.lua -n main.lua
+
+	for n in ${mods}
 	do
-		sudo ${TOOL} upload $n.lua -n main.lua
+		sudo ${TOOL} upload $n.lua -n $n.lua
 	done
 
 	sudo ${TOOL} upload ../init.lua -n init.lua
@@ -32,13 +38,13 @@ upload ()
 
 case "$1" in
 	test1)
-		upload "test1"
+		upload "test1" "gpio_motors"
 		;;
 	test2)
-		upload "test2"
+		upload "test2" "gpio_motors"
 		;;
 	test3)
-		upload "test3"
+		upload "test3" "pwm_motors"
 		;;
 	*)
 		usage	

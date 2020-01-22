@@ -8,46 +8,18 @@
 --
 
 --
--- motors
+-- modules
 --
 
-LRWD_PIN = 5
-LFWD_PIN = 6
-RRWD_PIN = 7
-RFWD_PIN = 8
+local m = require("gpio_motors")
 
--- forward
-function smars_forward()
-	gpio.write(LFWD_PIN, gpio.HIGH)
-	gpio.write(LRWD_PIN, gpio.LOW)
+-- settings
 
-	gpio.write(RFWD_PIN, gpio.HIGH)
-	gpio.write(RRWD_PIN, gpio.LOW)
-end
-
--- rotate
-function smars_rotate()
-	gpio.write(LFWD_PIN, gpio.LOW)
-	gpio.write(LRWD_PIN, gpio.HIGH)
-
-	gpio.write(RFWD_PIN, gpio.HIGH)
-	gpio.write(RRWD_PIN, gpio.LOW)
-end
-
--- stop
-function smars_stop()
-	gpio.write(LFWD_PIN, gpio.LOW)
-	gpio.write(LRWD_PIN, gpio.LOW)
-
-	gpio.write(RFWD_PIN, gpio.LOW)
-	gpio.write(RRWD_PIN, gpio.LOW)
-end
+dofile("settings.lua")
 
 --
 -- LED
 --
-
-LED_PIN = 4
 
 function led_toggle()
 	local val = gpio.read(LED_PIN)
@@ -97,10 +69,10 @@ function done_measuring()
 
 	if dist < 15.0 then
 		print "rotate..."
-		smars_rotate()
+		m.left()
 	else
 		print "forward..."
-		smars_forward()
+		m.fwd()
 	end
 
 	if CONTINUOUS then
@@ -159,17 +131,12 @@ end
 gpio.mode(TRIG_PIN, gpio.OUTPUT)
 gpio.mode(ECHO_PIN, gpio.INT)
 
--- configure motor pins
-gpio.mode(LFWD_PIN, gpio.OUTPUT)
-gpio.mode(LRWD_PIN, gpio.OUTPUT)
-gpio.mode(RFWD_PIN, gpio.OUTPUT)
-gpio.mode(RRWD_PIN, gpio.OUTPUT)
-
 -- configure LED pin
 gpio.mode(LED_PIN, gpio.OUTPUT)
 
--- stop motors
-smars_stop()
+-- configure motors
+
+m.init(LFWD_PIN, LREV_PIN, RFWD_PIN, RREV_PIN)
 
 -- trigger timer
 tm = tmr.create()

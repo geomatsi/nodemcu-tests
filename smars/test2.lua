@@ -7,69 +7,21 @@
 -- Copyright 2019, Matyukevich Sergey <geomatsi@gmail.com>
 --
 
--- Settings
+--
+-- modules
+--
+
+local m = require("gpio_motors")
+
+--
+-- settings
+--
 
 dofile("settings.lua")
 
 --
--- motors
---
-
-LRWD_PIN = 5
-LFWD_PIN = 6
-RRWD_PIN = 7
-RFWD_PIN = 8
-
--- forward
-function smars_forward()
-	gpio.write(LFWD_PIN, gpio.HIGH)
-	gpio.write(LRWD_PIN, gpio.LOW)
-
-	gpio.write(RFWD_PIN, gpio.HIGH)
-	gpio.write(RRWD_PIN, gpio.LOW)
-end
-
--- backward
-function smars_backward()
-	gpio.write(LFWD_PIN, gpio.LOW)
-	gpio.write(LRWD_PIN, gpio.HIGH)
-
-	gpio.write(RFWD_PIN, gpio.LOW)
-	gpio.write(RRWD_PIN, gpio.HIGH)
-end
-
--- rotate left
-function smars_rotate_left()
-	gpio.write(LFWD_PIN, gpio.LOW)
-	gpio.write(LRWD_PIN, gpio.HIGH)
-
-	gpio.write(RFWD_PIN, gpio.HIGH)
-	gpio.write(RRWD_PIN, gpio.LOW)
-end
-
--- rotate right
-function smars_rotate_right()
-	gpio.write(LFWD_PIN, gpio.HIGH)
-	gpio.write(LRWD_PIN, gpio.LOW)
-
-	gpio.write(RFWD_PIN, gpio.LOW)
-	gpio.write(RRWD_PIN, gpio.HIGH)
-end
-
--- stop
-function smars_stop()
-	gpio.write(LFWD_PIN, gpio.LOW)
-	gpio.write(LRWD_PIN, gpio.LOW)
-
-	gpio.write(RFWD_PIN, gpio.LOW)
-	gpio.write(RRWD_PIN, gpio.LOW)
-end
-
---
 -- LED
 --
-
-LED_PIN = 4
 
 function led_toggle()
 	local val = gpio.read(LED_PIN)
@@ -218,19 +170,19 @@ local function ws_recv(ws, msg, opcode)
 	-- process server command
 	if starts_with(msg, "stop") then
 		print("stop")
-		smars_stop()
+		m.stop()
 	elseif starts_with(msg, "fwd") then
 		print("forward")
-		smars_forward()
+		m.fwd()
 	elseif starts_with(msg, "rwd") then
 		print("backward")
-		smars_backward()
+		m.rev()
 	elseif starts_with(msg, "rotl") then
 		print("rotate left")
-		smars_rotate_left()
+		m.left()
 	elseif starts_with(msg, "rotr") then
 		print("rotate right")
-		smars_rotate_right()
+		m.right()
 	elseif starts_with(msg, "dist") then
 		local resp = string.format("%d", distance * 100)
 		print("distance: ", resp)
@@ -257,20 +209,15 @@ end
 --
 
 -- configure motors
---
-gpio.mode(LFWD_PIN, gpio.OUTPUT)
-gpio.mode(LRWD_PIN, gpio.OUTPUT)
-gpio.mode(RFWD_PIN, gpio.OUTPUT)
-gpio.mode(RRWD_PIN, gpio.OUTPUT)
 
-smars_stop()
+m.init(LFWD_PIN, LREV_PIN, RFWD_PIN, RREV_PIN)
 
 -- configure LED
---
+
 gpio.mode(LED_PIN, gpio.OUTPUT)
 
 -- configure HC-SR04 ultrasound sensor
---
+
 gpio.mode(TRIG_PIN, gpio.OUTPUT)
 gpio.mode(ECHO_PIN, gpio.INT)
 tm = tmr.create()
@@ -279,7 +226,7 @@ gpio.trig(ECHO_PIN, "both", echo_callback)
 measure()
 
 -- connect to ws server
---
+
 ws = websocket.createClient()
 ws:config({headers={['User-Agent']='SMARS'}})
 ws:on('connection', ws_conn)
