@@ -38,10 +38,10 @@ upload ()
 
 case "$1" in
 	test1)
-		upload "test1" "gpio_motors"
+		upload "test1" "gpio_motors" "hc_sr_04"
 		;;
 	test2)
-		upload "test2" "gpio_motors"
+		upload "test2" "gpio_motors" "hc_sr_04"
 		;;
 	test3)
 		upload "test3" "pwm_motors"
