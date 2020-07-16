@@ -1,10 +1,11 @@
 # Notes
 
-These notes should be suitable for both [WeMos Mini](https://wiki.wemos.cc/products:d1:d1_mini) boards as well as for the following simple ESP12F circuitry suitable even for breadboard:
+These notes should work for both [WeMos Mini](https://wiki.wemos.cc/products:d1:d1_mini) boards
+as well as for the following simple ESP12F circuitry suitable even for breadboard:
 
-PIC TODO (ESP12F simple circuitry)
+![alt text](pics/esp12f-proto.png)
 
-However in the case of WeMos board there is no need to manually change RESET and GPIO0 levels and to use *before* and *after* parameters in *esptool*.
+__However__ in the case of WeMos board there is no need to manually change RESET and GPIO0 levels and to use *before* and *after* parameters in *esptool*.
 All the switching between running mode and programming mode will be done done using DTR/RTS of integrated USB-to-Serial chip.
 
 ## Using Minicom with original AI Thinker firmware
