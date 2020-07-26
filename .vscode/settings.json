@@ -9,5 +9,7 @@
         "file",
         "websocket",
         "pwm",
+        "adc",
+        "i2c"
     ]
 }
