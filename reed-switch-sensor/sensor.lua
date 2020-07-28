@@ -21,6 +21,22 @@ local function get_reed_switches()
     return string.format("%d/%d/%d/%d", v1, v2, v3, v4)
 end
 
+local function gpio_event(client)
+  return function()
+	local pins = get_reed_switches()
+	client:publish(MQTT_PINS, pins, 0 , 0)
+  end
+end
+
+local function gpio_init(pin, client)
+	if (pin ~= 0) then
+		gpio.mode(pin, gpio.INT)
+		gpio.trig(pin, "both", gpio_event(client))
+	else
+		gpio.mode(pin, gpio.INPUT)
+	end
+end
+
 -- I2C: read temperature sensor
 
 local function get_temperature()
@@ -103,7 +119,7 @@ local function create_mqtt_action_callback(client)
 		return
 	end
 
-	tmr.create():alarm(5 * 1000, tmr.ALARM_SINGLE, create_mqtt_action_callback(client))
+	tmr.create():alarm(10 * 1000, tmr.ALARM_SINGLE, create_mqtt_action_callback(client))
   end
 end
 
@@ -159,29 +175,24 @@ wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, wifi_disconnect_event)
 -- main
 --
 
+-- init mqtt client
+m = mqtt.Client("test", 120)
+m:on("offline", mqtt_reconnect)
+
 -- init ADC hardware
 if adc.force_init_mode(adc.INIT_VDD33) then
 	print("adc reconfigured: reboot scheduled...")
 	node.restart()
 end
 
--- init pins connected to Reed switches
-gpio.mode(RSW_PIN1, gpio.INPUT)
-gpio.mode(RSW_PIN2, gpio.INPUT)
-gpio.mode(RSW_PIN3, gpio.INPUT)
-gpio.mode(RSW_PIN4, gpio.INPUT)
+-- init pins connected to Reed switches: use interrupts if possible
+gpio_init(RSW_PIN1, m)
+gpio_init(RSW_PIN2, m)
+gpio_init(RSW_PIN3, m)
+gpio_init(RSW_PIN4, m)
 
 -- init I2C connected to temperature sensor
 i2c.setup(0, I2C_SDA, I2C_SCL, i2c.SLOW)
-
--- start readers
--- tmr.create():alarm(10 * 1000, tmr.ALARM_AUTO, get_light)
--- tmr.create():alarm(30 * 1000, tmr.ALARM_AUTO, get_temp)
--- tmr.create():alarm(5 * 1000, tmr.ALARM_AUTO, get_rs)
-
--- init mqtt client
-m = mqtt.Client("test", 120)
-m:on("offline", mqtt_reconnect)
 
 -- init wifi connection
 print("Connecting to WiFi access point...")
