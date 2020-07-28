@@ -2,25 +2,28 @@
 
 dofile("settings.lua")
 
--- adc: read light sensor data
+-- ADC: read light sensor data
 
 local function get_light()
-	print("light:", adc.read(0))
+	local data = adc.read(0)
+	print("light:", data)
+	return data
 end
 
--- gpio: reed switch reading
+-- GPIO: reed switch reading
 
-local function get_rs()
+local function get_reed_switches()
 	local v1 = gpio.read(RSW_PIN1)
 	local v2 = gpio.read(RSW_PIN2)
 	local v3 = gpio.read(RSW_PIN3)
 	local v4 = gpio.read(RSW_PIN4)
 	print("reed switches: " .. v1 .. "/" .. v2 .. "/" .. v3 .. "/" .. v4)
+    return string.format("%d/%d/%d/%d", v1, v2, v3, v4)
 end
 
--- i2c: read temperature sensor
+-- I2C: read temperature sensor
 
-local function get_temp()
+local function get_temperature()
 	-- Example for LM75A temperature i2c sensor
 	--   device address: 0x48
 	--   temperature register (read 2 bytes): 0x0
@@ -48,29 +51,139 @@ local function get_temp()
 		temp = temp + 0.5
 	end
 
-	print("I2C read: " .. temp)
+	print("temperature:", temp)
+	return temp
 end
+
+-- MQTT
+
+local function create_mqtt_action_callback(client)
+  return function()
+	local ret = true
+
+    print("MQTT publish...")
+
+    local free = string.format("%d", bit.rshift(node.heap(), 10))
+	ret = client:publish(MQTT_FREE, free, 0, 0)
+
+	if (not ret) then
+		return
+	end
+
+    local rssi = wifi.sta.getrssi()
+    if (rssi ~= nil) then
+      rssi = string.format("%d", rssi)
+    else
+      rssi = "none"
+    end
+	ret = client:publish(MQTT_RSSI, rssi, 0, 0)
+
+	if (not ret) then
+		return
+	end
+
+	local light = get_light()
+	ret = client:publish(MQTT_LIGHT, light, 0 , 0)
+
+	if (not ret) then
+		return
+	end
+
+	local temp = get_temperature()
+	ret = client:publish(MQTT_TEMP, temp, 0 , 0)
+
+	if (not ret) then
+		return
+	end
+
+	local pins = get_reed_switches()
+	ret = client:publish(MQTT_PINS, pins, 0 , 0)
+
+	if (not ret) then
+		return
+	end
+
+	tmr.create():alarm(5 * 1000, tmr.ALARM_SINGLE, create_mqtt_action_callback(client))
+  end
+end
+
+local function mqtt_connected(client)
+  print("MQTT connected...")
+	tmr.create():alarm(10 * 1000, tmr.ALARM_SINGLE, create_mqtt_action_callback(client))
+end
+
+local function mqtt_reconnect(client)
+  print("MQTT connect failed...")
+	tmr.create():alarm(10 * 1000, tmr.ALARM_SINGLE, create_mqtt_retry_callback(client))
+end
+
+function create_mqtt_retry_callback(client)
+  return function()
+    print("MQTT reconnect...")
+    client:connect(MQTT_ADDR, MQTT_PORT, mqtt_connected, mqtt_reconnect)
+  end
+end
+
+-- WIFI
+
+local function wifi_connect_event(conn)
+  print("Connected to AP(" .. conn.SSID .. ")...")
+end
+
+local function wifi_ip_addr_event(conn)
+  print("Obtained IP(" .. conn.IP .. ")...")
+  m:connect(MQTT_ADDR, MQTT_PORT, mqtt_connected, mqtt_reconnect)
+end
+
+local function wifi_disconnect_event(conn)
+  if conn.reason == wifi.eventmon.reason.ASSOC_LEAVE then
+    print("disconnected...")
+    return
+  else
+    print("Failed to connect to AP(" .. conn.SSID .. ")")
+  end
+
+  for key,val in pairs(wifi.eventmon.reason) do
+    if val == conn.reason then
+      print("Reason: " .. val .. "(" .. key .. ")")
+      break
+    end
+  end
+end
+
+wifi.eventmon.register(wifi.eventmon.STA_CONNECTED, wifi_connect_event)
+wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, wifi_ip_addr_event)
+wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, wifi_disconnect_event)
 
 --
 -- main
 --
 
--- init hardware
-
+-- init ADC hardware
 if adc.force_init_mode(adc.INIT_VDD33) then
 	print("adc reconfigured: reboot scheduled...")
 	node.restart()
 end
 
+-- init pins connected to Reed switches
 gpio.mode(RSW_PIN1, gpio.INPUT)
 gpio.mode(RSW_PIN2, gpio.INPUT)
 gpio.mode(RSW_PIN3, gpio.INPUT)
 gpio.mode(RSW_PIN4, gpio.INPUT)
 
+-- init I2C connected to temperature sensor
 i2c.setup(0, I2C_SDA, I2C_SCL, i2c.SLOW)
 
 -- start readers
+-- tmr.create():alarm(10 * 1000, tmr.ALARM_AUTO, get_light)
+-- tmr.create():alarm(30 * 1000, tmr.ALARM_AUTO, get_temp)
+-- tmr.create():alarm(5 * 1000, tmr.ALARM_AUTO, get_rs)
 
-tmr.create():alarm(10 * 1000, tmr.ALARM_AUTO, get_light)
-tmr.create():alarm(30 * 1000, tmr.ALARM_AUTO, get_temp)
-tmr.create():alarm(5 * 1000, tmr.ALARM_AUTO, get_rs)
+-- init mqtt client
+m = mqtt.Client("test", 120)
+m:on("offline", mqtt_reconnect)
+
+-- init wifi connection
+print("Connecting to WiFi access point...")
+wifi.setmode(wifi.STATION)
+wifi.sta.config({ssid=WIFI_SSID, pwd=WIFI_PASS})
