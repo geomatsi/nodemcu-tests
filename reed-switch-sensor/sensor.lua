@@ -18,14 +18,14 @@ local function get_reed_switches()
 	local v3 = gpio.read(RSW_PIN3)
 	local v4 = gpio.read(RSW_PIN4)
 	print("reed switches: " .. v1 .. "/" .. v2 .. "/" .. v3 .. "/" .. v4)
-    return string.format("%d/%d/%d/%d", v1, v2, v3, v4)
+	return string.format("%d/%d/%d/%d", v1, v2, v3, v4)
 end
 
 local function gpio_event(client)
-  return function()
-	local pins = get_reed_switches()
-	client:publish(MQTT_PINS, pins, 0 , 0)
-  end
+	return function()
+		local pins = get_reed_switches()
+		client:publish(MQTT_PINS, pins, 0 , 0)
+	end
 end
 
 local function gpio_init(pin, client)
@@ -74,97 +74,97 @@ end
 -- MQTT
 
 local function create_mqtt_action_callback(client)
-  return function()
-	local ret = true
+	return function()
+		local ret = true
 
-    print("MQTT publish...")
+		print("MQTT publish...")
 
-    local free = string.format("%d", bit.rshift(node.heap(), 10))
-	ret = client:publish(MQTT_FREE, free, 0, 0)
+		local free = string.format("%d", bit.rshift(node.heap(), 10))
+		ret = client:publish(MQTT_FREE, free, 0, 0)
 
-	if (not ret) then
-		return
+		if (not ret) then
+			return
+		end
+
+		local rssi = wifi.sta.getrssi()
+		if (rssi ~= nil) then
+			rssi = string.format("%d", rssi)
+		else
+			rssi = "none"
+		end
+		ret = client:publish(MQTT_RSSI, rssi, 0, 0)
+
+		if (not ret) then
+			return
+		end
+
+		local light = get_light()
+		ret = client:publish(MQTT_LIGHT, light, 0 , 0)
+
+		if (not ret) then
+			return
+		end
+
+		local temp = get_temperature()
+		ret = client:publish(MQTT_TEMP, temp, 0 , 0)
+
+		if (not ret) then
+			return
+		end
+
+		local pins = get_reed_switches()
+		ret = client:publish(MQTT_PINS, pins, 0 , 0)
+
+		if (not ret) then
+			return
+		end
+
+		tmr.create():alarm(10 * 1000, tmr.ALARM_SINGLE, create_mqtt_action_callback(client))
 	end
-
-    local rssi = wifi.sta.getrssi()
-    if (rssi ~= nil) then
-      rssi = string.format("%d", rssi)
-    else
-      rssi = "none"
-    end
-	ret = client:publish(MQTT_RSSI, rssi, 0, 0)
-
-	if (not ret) then
-		return
-	end
-
-	local light = get_light()
-	ret = client:publish(MQTT_LIGHT, light, 0 , 0)
-
-	if (not ret) then
-		return
-	end
-
-	local temp = get_temperature()
-	ret = client:publish(MQTT_TEMP, temp, 0 , 0)
-
-	if (not ret) then
-		return
-	end
-
-	local pins = get_reed_switches()
-	ret = client:publish(MQTT_PINS, pins, 0 , 0)
-
-	if (not ret) then
-		return
-	end
-
-	tmr.create():alarm(10 * 1000, tmr.ALARM_SINGLE, create_mqtt_action_callback(client))
-  end
 end
 
 local function mqtt_connected(client)
-  print("MQTT connected...")
+	print("MQTT connected...")
 	tmr.create():alarm(10 * 1000, tmr.ALARM_SINGLE, create_mqtt_action_callback(client))
 end
 
 local function mqtt_reconnect(client)
-  print("MQTT connect failed...")
+	print("MQTT connect failed...")
 	tmr.create():alarm(10 * 1000, tmr.ALARM_SINGLE, create_mqtt_retry_callback(client))
 end
 
 function create_mqtt_retry_callback(client)
-  return function()
-    print("MQTT reconnect...")
-    client:connect(MQTT_ADDR, MQTT_PORT, mqtt_connected, mqtt_reconnect)
-  end
+	return function()
+		print("MQTT reconnect...")
+		client:connect(MQTT_ADDR, MQTT_PORT, mqtt_connected, mqtt_reconnect)
+	end
 end
 
 -- WIFI
 
 local function wifi_connect_event(conn)
-  print("Connected to AP(" .. conn.SSID .. ")...")
+	print("Connected to AP(" .. conn.SSID .. ")...")
 end
 
 local function wifi_ip_addr_event(conn)
-  print("Obtained IP(" .. conn.IP .. ")...")
-  m:connect(MQTT_ADDR, MQTT_PORT, mqtt_connected, mqtt_reconnect)
+	print("Obtained IP(" .. conn.IP .. ")...")
+	m:connect(MQTT_ADDR, MQTT_PORT, mqtt_connected, mqtt_reconnect)
 end
 
 local function wifi_disconnect_event(conn)
-  if conn.reason == wifi.eventmon.reason.ASSOC_LEAVE then
-    print("disconnected...")
-    return
-  else
-    print("Failed to connect to AP(" .. conn.SSID .. ")")
-  end
+	if conn.reason == wifi.eventmon.reason.ASSOC_LEAVE then
+		print("disconnected...")
+		return
+	else
+		print("Failed to connect to AP(" .. conn.SSID .. ")")
+	end
 
-  for key,val in pairs(wifi.eventmon.reason) do
-    if val == conn.reason then
-      print("Reason: " .. val .. "(" .. key .. ")")
-      break
-    end
-  end
+	for key,val in pairs(wifi.eventmon.reason) do
+		if val == conn.reason then
+			print("Reason: " .. val .. "(" .. key .. ")")
+			break
+		end
+	end
 end
 
 wifi.eventmon.register(wifi.eventmon.STA_CONNECTED, wifi_connect_event)
